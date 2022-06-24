@@ -2,10 +2,16 @@ from copy import deepcopy
 from time import sleep
 import numpy as np
 
+# Util = [[0] * 4] * 3
 mdp_actions = ['UP', 'DOWN', 'RIGHT', 'LEFT']
 
+Util = [[0, 0, 0, 0],
+         [0, 0, 0, 0],
+         [0, 0, 0, 0]]
+
 def state_to_reward(mdp, r, c):
-    num = float(mdp.board[r][c]) if (mdp.board[r][c] != 'WALL') else 0
+    num = float(mdp.board[r][c]) if (mdp.board[r][c] != 'WALL') else -0.04
+   # print("Reward for [", r, "][", c, "] is: ", num)
     return num
 
 
@@ -63,7 +69,12 @@ def get_policy(mdp, U):
     #
     
     # ====== YOUR CODE: ======
-    policy = [[0]*mdp.num_col]*mdp.num_row
+    policy = []
+    for r in range(mdp.num_row):
+        row = []
+        for c in range(mdp.num_col):
+            row.append(0)
+        policy.append(row)
     for r in range (mdp.num_row):
             for c in range (mdp.num_col):
                 state = (r, c)
@@ -87,41 +98,47 @@ def get_policy(mdp, U):
 
 
 def policy_evaluation(mdp, policy):
-    U = [[0]*mdp.num_col]*mdp.num_row
     for r in range(mdp.num_row):
         for c in range(mdp.num_col):
             current_state = (r, c)
             sigma = 0
-            if current_state in mdp.terminal_states:  
+            if current_state in mdp.terminal_states:
                 reward = state_to_reward(mdp, r, c)
-                U[r][c] = reward  
+                Util[r][c] = reward
             elif mdp.board[r][c] == 'WALL':
-                U[r][c] = 0 
+                Util[r][c] = -0.04 #TEMP
             else:
                 probs = mdp.transition_function[policy[r][c]]
                 for i, k in enumerate(probs):
                     a, b = mdp.step(current_state, mdp_actions[i])
-                    sigma += k * U[a][b]
+                    sigma += k * Util[a][b]
                 reward = state_to_reward(mdp, r, c)
-                U[r][c] = reward + mdp.gamma * sigma 
-    return U
+                Util[r][c] = reward + mdp.gamma * sigma
+
+    print("Printing utility...")
+    mdp.print_utility(Util)
+    return Util
 
 
 def policy_iteration(mdp, policy_init):
-    U = policy_evaluation(mdp, policy_init)
+    # Util = [[0]*mdp.num_col]*mdp.num_row
     unchanged = True
-    while unchanged is True:
+    u = 0
+    for u in range(16): #while unchanged: #
+        U = policy_evaluation(mdp, policy_init)
+        unchanged = True
+        print("Just to reiterate...")
         for r in range(mdp.num_row):
             for c in range(mdp.num_col):
                 current_state = (r, c)
-                iteration_sum = 0
+                iteration_sum = -float("inf")
                 argmax = 0 #Just to initialize it.
                 for a in mdp.actions:
                     temp_sum = 0
                     probs = mdp.transition_function[a]
                     for i, k in enumerate(probs):
-                        a, b = mdp.step(current_state, mdp_actions[i])
-                        temp_sum += k * U[a][b]
+                        r1, c1 = mdp.step(current_state, mdp_actions[i])
+                        temp_sum += k * U[r1][c1]
                     if temp_sum > iteration_sum:
                         iteration_sum = temp_sum
                         argmax = a
@@ -129,9 +146,11 @@ def policy_iteration(mdp, policy_init):
                     probs = mdp.transition_function[policy_init[r][c]]
                     policy_sum = 0
                     for i, k in enumerate(probs):
-                        a, b = mdp.step(current_state, mdp_actions[i])
-                        policy_sum += k * U[a][b]
+                        r1, c1 = mdp.step(current_state, mdp_actions[i])
+                        policy_sum += k * U[r1][c1]
                     if iteration_sum > policy_sum:
-                        policy_init[r][c] = mdp_actions[argmax]
+                        print("Changing policy in iteration number ", u)
+                        policy_init[r][c] = argmax
                         unchanged = False
+        u += 1
     return policy_init
