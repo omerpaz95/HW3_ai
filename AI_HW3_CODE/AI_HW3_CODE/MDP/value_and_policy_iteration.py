@@ -106,7 +106,7 @@ def policy_evaluation(mdp, policy):
                 reward = state_to_reward(mdp, r, c)
                 Util[r][c] = reward
             elif mdp.board[r][c] == 'WALL':
-                Util[r][c] = -0.04 #TEMP
+                continue
             else:
                 probs = mdp.transition_function[policy[r][c]]
                 for i, k in enumerate(probs):
@@ -122,34 +122,33 @@ def policy_evaluation(mdp, policy):
 
 def policy_iteration(mdp, policy_init):
     # Util = [[0]*mdp.num_col]*mdp.num_row
-    unchanged = True
+    unchanged = False
     u = 0
-    for u in range(16): #while unchanged: #
+    while not unchanged: #for u in range(16): #
         U = policy_evaluation(mdp, policy_init)
         unchanged = True
         print("Just to reiterate...")
         for r in range(mdp.num_row):
             for c in range(mdp.num_col):
                 current_state = (r, c)
-                iteration_sum = -float("inf")
-                argmax = 0 #Just to initialize it.
-                for a in mdp.actions:
-                    temp_sum = 0
-                    probs = mdp.transition_function[a]
-                    for i, k in enumerate(probs):
-                        r1, c1 = mdp.step(current_state, mdp_actions[i])
-                        temp_sum += k * U[r1][c1]
-                    if temp_sum > iteration_sum:
-                        iteration_sum = temp_sum
-                        argmax = a
                 if current_state not in mdp.terminal_states and mdp.board[r][c] != 'WALL':
+                    iteration_sum = -float("inf")
+                    argmax = 0 #Just to initialize it.
+                    for a in mdp.actions:
+                        temp_sum = 0
+                        probs = mdp.transition_function[a]
+                        for i, k in enumerate(probs):
+                            r1, c1 = mdp.step(current_state, mdp_actions[i])
+                            temp_sum += k * U[r1][c1]
+                        if temp_sum > iteration_sum:
+                            iteration_sum = temp_sum
+                            argmax = a
                     probs = mdp.transition_function[policy_init[r][c]]
                     policy_sum = 0
                     for i, k in enumerate(probs):
                         r1, c1 = mdp.step(current_state, mdp_actions[i])
                         policy_sum += k * U[r1][c1]
                     if iteration_sum > policy_sum:
-                        print("Changing policy in iteration number ", u)
                         policy_init[r][c] = argmax
                         unchanged = False
         u += 1
