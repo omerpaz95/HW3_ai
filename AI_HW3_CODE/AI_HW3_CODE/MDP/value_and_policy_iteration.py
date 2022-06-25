@@ -149,5 +149,4 @@ def policy_iteration(mdp, policy_init):
                     if iteration_sum > policy_sum:
                         policy_init[r][c] = argmax
                         unchanged = False
-        u += 1
     return policy_init
