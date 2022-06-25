@@ -11,7 +11,6 @@ Util = [[0, 0, 0, 0],
 
 def state_to_reward(mdp, r, c):
     num = float(mdp.board[r][c]) if (mdp.board[r][c] != 'WALL') else -0.04
-   # print("Reward for [", r, "][", c, "] is: ", num)
     return num
 
 
@@ -25,36 +24,39 @@ def value_iteration(mdp, U_init, epsilon=10 ** (-3)):
 
     # ====== YOUR CODE: ======
     u_prev = U_init
-    u_curr = U_init
     max_delta = epsilon*(1-mdp.gamma)/(mdp.gamma)
+    for r in range (mdp.num_row):
+            for c in range (mdp.num_col):
+                u_prev[r][c] = state_to_reward(mdp, r, c)
+    print("new initial utility: ", u_prev)
+    u_curr = deepcopy(u_prev)
+   
     while True:
         delta = 0
-        u_prev = u_curr
+        u_prev = deepcopy(u_curr)
         for r in range (mdp.num_row):
             for c in range (mdp.num_col):
                 state = (int(r), int(c))
                 # belman equation
-                belman_results = []
-                for a in mdp.actions:
-                    temp_sum = 0
-                    probs = mdp.transition_function[a]
-                    for i, p in enumerate (probs):
-                        new_state = mdp.step(state, mdp_actions[i])
-                        # print("probability :  ", probs)
-                        # print("action :  ", a)
-                        # print("old state :  ", state)
-                        # print("new state :  ", new_state)
-                        temp_sum += p * u_prev[new_state[0]][new_state[1]]
-                    belman_results.append(temp_sum)
-                    # print("temp sum: ", temp_sum )
-                reward = state_to_reward(mdp, r, c)
-                u_curr[r][c] = reward + mdp.gamma * max(belman_results) 
-                delta = max(delta, abs(u_curr[r][c] - u_prev[r][c]))
+                if state in mdp.terminal_states:
+                    reward = state_to_reward(mdp, r, c)
+                    u_curr[r][c] = reward  
+                elif mdp.board[r][c] == 'WALL':
+                    u_curr[r][c] = 0
+                else:
+                    belman_results = []
+                    for a in mdp.actions:
+                        temp_sum = 0
+                        probs = mdp.transition_function[a]
+                        for i, p in enumerate (probs):
+                            new_state = mdp.step(state, mdp_actions[i])
+                            temp_sum += p * u_prev[new_state[0]][new_state[1]]
+                        belman_results.append(temp_sum)
+                    reward = state_to_reward(mdp, r, c)
+                    u_curr[r][c] = reward + mdp.gamma * max(belman_results) 
+                    delta = max(delta, abs(u_curr[r][c] - u_prev[r][c]))
         if delta < max_delta or delta == 0:
             break
-        else:
-            print("delta = ", delta)
-            sleep(1)
     return u_curr
                 
             
@@ -85,10 +87,6 @@ def get_policy(mdp, U):
                     probs = mdp.transition_function[a]
                     for i, p in enumerate (probs):
                         new_state = mdp.step(state, mdp_actions[i])
-                        # print("probability :  ", probs)
-                        # print("action :  ", a)
-                        # print("old state :  ", state)
-                        # print("new state :  ", new_state)
                         temp_sum += p * U[new_state[0]][new_state[1]]
                     belman_results.append(temp_sum)
                 action= belman_results.index(max(belman_results))
