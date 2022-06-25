@@ -113,8 +113,8 @@ def policy_evaluation(mdp, policy):
                 reward = state_to_reward(mdp, r, c)
                 Util[r][c] = reward + mdp.gamma * sigma
 
-    print("Printing utility...")
-    mdp.print_utility(Util)
+    #print("Printing utility...")
+    #mdp.print_utility(Util)
     return Util
 
 
@@ -122,10 +122,10 @@ def policy_iteration(mdp, policy_init):
     # Util = [[0]*mdp.num_col]*mdp.num_row
     unchanged = False
     u = 0
-    while not unchanged: #for u in range(16): #
+    while not unchanged:
         U = policy_evaluation(mdp, policy_init)
         unchanged = True
-        print("Just to reiterate...")
+        #print("Just to reiterate...")
         for r in range(mdp.num_row):
             for c in range(mdp.num_col):
                 current_state = (r, c)
