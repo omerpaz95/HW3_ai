@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from ID3 import ID3
 #from KNN import KNNClassifier
 from utils import accuracy, l2_dist
 
@@ -36,6 +37,15 @@ class Test(unittest.TestCase):
         accuracy_val = accuracy(y1, y2)
         self.assertEqual(accuracy_val, 1 / 3)
         print('Success')
+
+    def test_entropy(self):
+        rows = np.array([0,0,0,0,0,0,0,0,0,0])
+        labels = np.array(['M','M','M','M','M','M','M','M','M','F'])
+        self.assertEqual(len(rows), len(labels))
+        entropy = ID3.entropy(rows, labels)
+        my_entropy = 0.4689955935892
+        self.assertAlmostEqual(entropy, my_entropy, delta=0.001)
+
 
 
 
