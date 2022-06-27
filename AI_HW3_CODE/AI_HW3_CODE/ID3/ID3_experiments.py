@@ -69,7 +69,7 @@ def basic_experiment(x_train, y_train, x_test, y_test, formatted_print=False):
 
 
 # ========================================================================
-def cross_validation_experiment(plot_graph=True):
+def cross_validation_experiment(x_train, y_train, x_test, y_test, plot_graph=True):
     """
     Use cross validation to find the best M for the ID3 model, used as pruning parameter.
 
@@ -81,15 +81,23 @@ def cross_validation_experiment(plot_graph=True):
     #  - Instate ID3 decision tree instance.
     #  - Fit the tree on the training data set.
     #  - Test the model on the test set (evaluate the accuracy) and print the result.
+    
+ 
 
     best_m = None
     accuracies = []
-    m_choices = []
+    m_choices = [3, 5, 10, 20, 45]
     num_folds = 5
+    for m in m_choices:
+            tree = ID3(['B', 'M'], min_for_pruning=m)
+            tree.fit(x_train, y_train)
+            predictions = tree.predict(x_test)
+            acc = accuracy(predictions, y_test)
+            accuracies.append(acc)
 
     # ====== YOUR CODE: ======
     assert len(m_choices) >= 5, 'fill the m_choices list with  at least 5 different values for M.'
-    raise NotImplementedError
+    #raise NotImplementedError
 
     # ========================
     accuracies_mean = np.array([np.mean(acc) * 100 for acc in accuracies])
@@ -149,7 +157,7 @@ if __name__ == '__main__':
            modify the value from False to True to plot the experiment result
     """
     plot_graphs = True
-    best_m = cross_validation_experiment(plot_graph=plot_graphs)
+    best_m = cross_validation_experiment(*data_split, plot_graph=plot_graphs)
     print(f'best_m = {best_m}')
 
     """

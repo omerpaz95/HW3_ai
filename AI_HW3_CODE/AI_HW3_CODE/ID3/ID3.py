@@ -162,7 +162,7 @@ class ID3:
         # OMER: I think I have to add leaves...
         best_question = None
         true_branch, false_branch = None, None
-        if all_equal(labels):
+        if all_equal(labels) or len(rows) <= self.min_for_pruning:
             return Leaf(rows, labels)
         gain, best_question, true_rows, true_labels, false_rows, false_labels = self.find_best_split(rows, labels)
 
@@ -207,11 +207,13 @@ class ID3:
                 return self.predict_sample(row, node.false_branch)
         else:
             preds = node.predictions
-            prediction = list(preds.keys())[0]
-            # if preds[self.label_names[0]] > preds[self.label_names[1]]:
-            #     prediction = self.label_names[0]
-            # else:
-            #     prediction = self.label_names[1]
+            if len(list(preds.keys())) > 1:
+                if preds[self.label_names[0]] > preds[self.label_names[1]]:
+                    prediction = self.label_names[0]
+                else:
+                    prediction = self.label_names[1]
+            else:
+                prediction = list(preds.keys())[0]
         return prediction
 
     def predict(self, rows):
@@ -226,6 +228,5 @@ class ID3:
         y_pred = np.zeros(shape=(len(rows), ), dtype=type(self.label_names[0]))
         for i, row in enumerate(rows):
             prediction = self.predict_sample(row)
-            print("Prediction: ", prediction)
             y_pred[i] = prediction
         return y_pred
