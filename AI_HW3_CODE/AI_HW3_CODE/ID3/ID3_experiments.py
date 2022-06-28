@@ -1,10 +1,13 @@
+from random import shuffle
+
+from sympy import true
 from ID3 import ID3
 from utils import *
 
 """
 Make the imports of python packages needed
 """
-
+from sklearn.model_selection import KFold
 """
 ========================================================================
 ========================================================================
@@ -15,7 +18,7 @@ Make the imports of python packages needed
 target_attribute = 'diagnosis'
 
 
-def find_best_pruning_m(train_dataset: np.array, m_choices, num_folds=5):
+def find_best_pruning_m(x_train, y_train, m_choices, num_folds=5):
     """
     Use cross validation to find the best M for the id3 model.
 
@@ -26,10 +29,10 @@ def find_best_pruning_m(train_dataset: np.array, m_choices, num_folds=5):
         best_M: the value of M with the highest mean accuracy across folds
         accuracies: The accuracies per fold for each M (list of lists).
     """
-
+    
     accuracies = []
     for i, m in enumerate(m_choices):
-        model = ID3(label_names=attributes_names, min_for_pruning=m)
+        model = ID3(label_names=['B', 'M'], min_for_pruning=m)
         # TODO:
         #  - Add a KFold instance of sklearn.model_selection, pass <ID> as random_state argument.
         #  - Train model num_folds times with different train/val data.
@@ -39,13 +42,21 @@ def find_best_pruning_m(train_dataset: np.array, m_choices, num_folds=5):
         #  or implement something else.
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError
+        
+        kf = KFold(n_splits = num_folds, shuffle = True, random_state = ID)
+        curr_acc = []
+        # for every fold we get an accuracy result and we append the resulted list to accuracies[]
+        for train, val in kf.split(x_train, y_train):
+            model.fit(x_train=x_train[train], y_train=y_train[train])
+            curr_acc.append(accuracy(y=y_train[val], y_pred=model.predict(x_train[val])))
+        accuracies.append(np.array(curr_acc))
+
         # ========================
 
     best_m_idx = np.argmax([np.mean(acc) for acc in accuracies])
     best_m = m_choices[best_m_idx]
 
-    return best_m, accuracies
+    return accuracies, best_m
 
 
 # ========================================================================
@@ -88,16 +99,16 @@ def cross_validation_experiment(x_train, y_train, x_test, y_test, plot_graph=Tru
     accuracies = []
     m_choices = [3, 5, 10, 20, 45]
     num_folds = 5
-    for m in m_choices:
-            tree = ID3(['B', 'M'], min_for_pruning=m)
-            tree.fit(x_train, y_train)
-            predictions = tree.predict(x_test)
-            acc = accuracy(predictions, y_test)
-            accuracies.append(acc)
+    # for m in m_choices:
+    #         tree = ID3(['B', 'M'], min_for_pruning=m)
+    #         tree.fit(x_train, y_train)
+    #         predictions = tree.predict(x_test)
+    #         acc = accuracy(predictions, y_test)
+    #         accuracies.append(acc)
 
     # ====== YOUR CODE: ======
     assert len(m_choices) >= 5, 'fill the m_choices list with  at least 5 different values for M.'
-    #raise NotImplementedError
+    accuracies, best_m = find_best_pruning_m(x_train=x_train, y_train=y_train, m_choices=m_choices, num_folds=num_folds)
 
     # ========================
     accuracies_mean = np.array([np.mean(acc) * 100 for acc in accuracies])
@@ -131,7 +142,10 @@ def best_m_test(x_train, y_train, x_test, y_test, min_for_pruning):
     acc = None
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError
+    tree = ID3(['B', 'M'], min_for_pruning=min_for_pruning)
+    tree.fit(x_train, y_train)
+    predictions = tree.predict(x_test)
+    acc = accuracy(predictions, y_test)
     # ========================
 
     return acc
